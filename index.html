@@ -85,6 +85,10 @@ a{color:inherit;text-decoration:none;}
 .info-tip .tip::before{content:"";position:absolute;top:-5px;left:12px;width:10px;height:10px;background:var(--charcoal);transform:rotate(45deg);}
 .info-tip:hover .tip{opacity:1;transform:translateY(0);}
 .info-tip .tip b{color:#ffd9c7;}
+.info-tip--right .tip{left:auto;right:-6px;}
+.info-tip--right .tip::before{left:auto;right:12px;}
+.tip-list{margin-top:2px;display:flex;flex-direction:column;gap:3px;}
+.tip-list div{white-space:nowrap;}
 
 .btn{display:inline-flex;align-items:center;gap:7px;border-radius:9px;font-weight:600;font-size:13px;padding:9px 15px;border:1px solid transparent;transition:background .12s,border-color .12s;}
 .btn .icon{width:16px;height:16px;}
@@ -691,7 +695,7 @@ function TrainingSetDrawer({ open, initial, sets, onClose, onSave }) {
             <div className="pick-hint">Select a module type above to see the modules you can add.</div>
           )}
           <div className="banner" style={{marginTop:18,marginBottom:0}}><Icons.Info/>
-            <span>Once saved, the <b>Data Recommender</b> uses this set to size each dataset folder — recommended counts appear in <b>Datasets &amp; Annotations</b>.</span></div>
+            <span>You can run <b>Data Recommender</b> inside <b>Datasets &amp; Annotations</b> section once all modules have been assigned a Training Set.</span></div>
         </div>
         <div className="drawer-foot">
           <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
@@ -765,10 +769,19 @@ function TrainingSetsScreen({ sets, setSets, showToast }) {
             <span className="tip">Specify the modules that would be trained together here. This is required to run the <b>Data Recommender</b> (in the Datasets &amp; Annotations section).</span>
           </span>
         </div>
-        <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
           {configComplete
             ? <span className="cfg-pill cfg-pill--ok" title="Every module belongs to a training set."><Icons.Check/>Config complete</span>
-            : <span className="cfg-pill cfg-pill--warn" title="Assign every module to a training set to enable the Data Recommender."><Icons.Alert/>Config incomplete · {unassigned.length} unassigned</span>}
+            : (<span style={{display:'inline-flex',alignItems:'center',gap:7}}>
+                <span className="info-tip info-tip--right" style={{margin:0}}>
+                  <Icons.Info/>
+                  <span className="tip">
+                    <b>Modules not in any training set</b>
+                    <span className="tip-list">{unassigned.map(m=>(<div key={m.id}>{m.varName} - {m.capName} - {m.name}</div>))}</span>
+                  </span>
+                </span>
+                <span className="cfg-pill cfg-pill--warn"><Icons.Alert/>Config incomplete · {unassigned.length} unassigned</span>
+              </span>)}
           <button className="btn btn--primary" onClick={openCreate}><Icons.Plus className="icon"/>Create training set</button>
         </div>
       </header>
