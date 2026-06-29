@@ -253,6 +253,10 @@ select.input{appearance:none;cursor:pointer;}
 .cfg-marker svg{width:16px;height:16px;flex:none;}
 .cfg-marker--ok{background:var(--green-bg);color:var(--green);}
 .cfg-marker--warn{background:var(--amber-bg);color:var(--amber);}
+.cfg-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;white-space:nowrap;}
+.cfg-pill svg{width:14px;height:14px;flex:none;}
+.cfg-pill--ok{background:var(--green-bg);color:var(--green);}
+.cfg-pill--warn{background:var(--amber-bg);color:var(--amber);}
 .pick-hint{padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border:1px dashed var(--border-strong);border-radius:10px;}
 .demo-wrap{display:inline-flex;align-items:center;gap:7px;margin-right:auto;background:#f3effa;border:1px dashed #c9b9ec;border-radius:9px;padding:4px 6px 4px 9px;}
 .demo-wrap .demo-tag{font-size:9px;font-weight:700;letter-spacing:.5px;color:#5a31b8;display:inline-flex;align-items:center;gap:4px;}
@@ -381,7 +385,7 @@ const MODULE_TYPES = [
 ];
 const typeById = (id) => MODULE_TYPES.find(t => t.id === id) || {name:id,color:{bg:'#eef0f3',fg:'#5a5f67'}};
 
-const VARIANTS = [
+let VARIANTS = [
   { id:'var-a', name:'Variant A', captures:[
       { id:'cap1', name:'Capture 1', cam:'Top camera', modules:[
           { id:'m1', type:'surface',  name:'Top Surface Defect', folders:3, classes:['Scratch','Dent','Stain'] },
@@ -408,9 +412,11 @@ const VARIANTS = [
       ]},
   ]},
 ];
-const ALL_MODULES = VARIANTS.flatMap(v => v.captures.flatMap(c =>
-  c.modules.map(m => ({...m, varId:v.id, varName:v.name, capId:c.id, capName:c.name, cam:c.cam}))));
-const moduleById = (id) => ALL_MODULES.find(m => m.id === id);
+let _newModId = 200;
+const DEFAULT_CLASSES = { surface:['Scratch','Dent'], bead:['Bead OK','Gap'], ocr:['Digits'], presence:['Present','Absent'], dim:['In tol','Out of tol'] };
+function allModules(){ return VARIANTS.flatMap(v => v.captures.flatMap(c =>
+  c.modules.map(m => ({...m, varId:v.id, varName:v.name, capId:c.id, capName:c.name, cam:c.cam})))); }
+const moduleById = (id) => allModules().find(m => m.id === id);
 
 let _tsId = 100;
 const INITIAL_SETS = [
@@ -732,7 +738,7 @@ function TrainingSetsScreen({ sets, setSets, showToast }) {
     if(varFilter!=='All'){ const vs=new Set(ts.members.map(id=>moduleById(id)?.varName)); if(!vs.has(varFilter)) return false; }
     return true;
   });
-  const unassigned = ALL_MODULES.filter(m=>!isAssigned(m.id, sets));
+  const unassigned = allModules().filter(m=>!isAssigned(m.id, sets));
   const configComplete = unassigned.length===0;
 
   function MenuCell({ ts }) {
@@ -759,11 +765,13 @@ function TrainingSetsScreen({ sets, setSets, showToast }) {
             <span className="tip">Specify the modules that would be trained together here. This is required to run the <b>Data Recommender</b> (in the Datasets &amp; Annotations section).</span>
           </span>
         </div>
-        <button className="btn btn--primary" onClick={openCreate}><Icons.Plus className="icon"/>Create training set</button>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          {configComplete
+            ? <span className="cfg-pill cfg-pill--ok" title="Every module belongs to a training set."><Icons.Check/>Config complete</span>
+            : <span className="cfg-pill cfg-pill--warn" title="Assign every module to a training set to enable the Data Recommender."><Icons.Alert/>Config incomplete · {unassigned.length} unassigned</span>}
+          <button className="btn btn--primary" onClick={openCreate}><Icons.Plus className="icon"/>Create training set</button>
+        </div>
       </header>
-      {configComplete
-        ? <div className="cfg-marker cfg-marker--ok"><Icons.Check/>Configuration complete — every module belongs to a training set. The Data Recommender can run.</div>
-        : <div className="cfg-marker cfg-marker--warn"><Icons.Alert/>Configuration incomplete — {unassigned.length} module{unassigned.length!==1?'s':''} not in any training set. Assign {unassigned.length!==1?'them':'it'} to enable the Data Recommender.</div>}
       <div className="filter-bar">
         <Dropdown label="Variant" value={varFilter} options={['All',...VARIANTS.map(v=>v.name)]} onChange={setVarFilter}/>
         <Dropdown label="Module type" value={typeFilter} options={['All',...MODULE_TYPES.map(t=>t.name)]} onChange={setTypeFilter}/>
@@ -837,12 +845,11 @@ function DatasetsScreen({ sets, showToast }) {
   const [running,setRunning]=useState(false);
   const [recoRun,setRecoRun]=useState(false);
   const [demoLabel,setDemoLabel]=useState('Auto (live)');
-  const [expanded,setExpanded]=useState(()=>new Set(['var-a','cap1','m1']));
+  const [varFilter,setVarFilter]=useState('All');
   const timer=useRef(null);
-  const toggle=(id)=>setExpanded(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
   useEffect(()=>()=>{ if(timer.current)clearTimeout(timer.current); },[]);
 
-  const configComplete = ALL_MODULES.every(m=>isAssigned(m.id, sets));
+  const configComplete = allModules().every(m=>isAssigned(m.id, sets));
   const demo = (DEMO_OPTS.find(d=>d[0]===demoLabel)||['',''])[1];
 
   // effective recommender state
@@ -867,56 +874,27 @@ function DatasetsScreen({ sets, showToast }) {
     setRunning(false); setDemoLabel('Auto (live)'); showToast('Recommender stopped');
   }
 
-  // pre-compute folders per module
-  const fdata = useMemo(()=>{ const map={}; ALL_MODULES.forEach(m=>map[m.id]=generateFolders(m)); return map; },[]);
-
   const dash = <span className="count count--muted">—</span>;
-  const rows=[];
+  // Flat list: one row per dataset folder, with Variant & Capture as columns.
+  const folderRows=[];
   for(const v of VARIANTS){
-    const vOpen=expanded.has(v.id);
-    rows.push(<tr key={v.id} className="clickable" onClick={()=>toggle(v.id)}>
-      <td><div className="name-cell"><button className={vOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
-        <Icons.Cube className="row-icon" style={{color:'var(--orange)'}}/><span className="row-name" style={{fontWeight:600}}>{v.name}</span></div></td>
-      <td/><td className="center">{dash}</td><td/><td/><td/><td/>
-    </tr>);
-    if(!vOpen) continue;
+    if(varFilter!=='All' && v.name!==varFilter) continue;
     for(const c of v.captures){
-      const cOpen=expanded.has(c.id);
-      rows.push(<tr key={c.id} className="clickable" onClick={()=>toggle(c.id)}>
-        <td><div className="name-cell indent-2"><button className={cOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
-          <Icons.Camera className="row-icon"/><span className="row-name">{c.name}</span><span className="row-meta">{c.cam}</span></div></td>
-        <td/><td className="center">{dash}</td><td/><td/><td/><td/>
-      </tr>);
-      if(!cOpen) continue;
       for(const m of c.modules){
-        const mOpen=expanded.has(m.id);
         const set=setForModule(m.id,sets);
-        const folders=fdata[m.id];
-        const up=folders.reduce((a,f)=>a+f.uploaded,0);
-        const an=folders.reduce((a,f)=>a+f.annotated,0);
-        const recSum = (showRec && set) ? folders.reduce((a,f)=>a+recForFolder(f.classes.length,set.members.length,f.idx),0) : null;
-        rows.push(<tr key={m.id} className="clickable" onClick={()=>toggle(m.id)}>
-          <td><div className="name-cell indent-3"><button className={mOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
-            <Icons.Box className="row-icon"/><span className="row-name">{m.name}</span></div></td>
-          <td><ClassChips classes={m.classes}/></td>
-          <td className="center num">{recSum!=null ? <span className="rec-strong">{recSum.toLocaleString()}</span> : dash}</td>
-          <td className="center num"><UploadedCount uploaded={up} recommended={recSum}/></td>
-          <td className="center num"><AnnotatedCount annotated={an} total={up}/></td>
-          <td><span className="date-cell-sm">2026-05-22</span></td>
-          <td className="actions-cell"/>
-        </tr>);
-        if(!mOpen) continue;
-        for(const f of folders){
-          const rec = (showRec && set) ? recForFolder(f.classes.length,set.members.length,f.idx) : null;
-          rows.push(<tr key={f.id}>
-            <td><div className="name-cell indent-4"><span className="chev-spacer"/><Icons.Folder className="row-icon"/><span className="row-name">{f.name}</span></div></td>
-            <td><ClassChips classes={f.classes}/></td>
-            <td className="center num">{rec!=null ? <span className="rec-strong">{rec.toLocaleString()}</span> : dash}</td>
-            <td className="center num"><UploadedCount uploaded={f.uploaded} recommended={rec}/></td>
-            <td className="center num"><AnnotatedCount annotated={f.annotated} total={f.uploaded}/></td>
-            <td><span className="date-cell-sm">2026-05-20</span></td>
-            <td className="actions-cell"/>
-          </tr>);
+        for(const f of generateFolders(m)){
+          const rec=(showRec && set)?recForFolder(f.classes.length,set.members.length,f.idx):null;
+          folderRows.push(
+            <tr key={f.id}>
+              <td>{v.name}</td>
+              <td><span style={{display:'inline-flex',flexDirection:'column'}}><span style={{fontWeight:500}}>{c.name}</span><span className="date-cell-sm">{c.cam}</span></span></td>
+              <td><div className="ts-name"><b>{f.name}</b><span>{m.name}</span></div></td>
+              <td><ClassChips classes={f.classes}/></td>
+              <td className="center num">{rec!=null ? <span className="rec-strong">{rec.toLocaleString()}</span> : dash}</td>
+              <td className="center num"><UploadedCount uploaded={f.uploaded} recommended={rec}/></td>
+              <td className="center num"><AnnotatedCount annotated={f.annotated} total={f.uploaded}/></td>
+              <td><span className="date-cell-sm">2026-05-20</span></td>
+            </tr>);
         }
       }
     }
@@ -934,7 +912,7 @@ function DatasetsScreen({ sets, showToast }) {
       <div className="banner"><Icons.Info/>
         <span>The <b>Recommended</b> column is produced by the <b>Data Recommender</b>, which sizes each folder from the <b>Training Sets</b> its module belongs to. Modules not in any training set can't be sized.</span></div>
       <div className="filter-bar">
-        <Dropdown label="Variant" value="All" options={['All',...VARIANTS.map(v=>v.name)]} onChange={()=>{}}/>
+        <Dropdown label="Variant" value={varFilter} options={['All',...VARIANTS.map(v=>v.name)]} onChange={setVarFilter}/>
         <div className="demo-wrap">
           <span className="demo-tag"><Icons.Flask/>DEMO</span>
           <Dropdown label="Reco state" value={demoLabel} options={DEMO_OPTS.map(d=>d[0])} onChange={setDemoLabel}/>
@@ -945,14 +923,16 @@ function DatasetsScreen({ sets, showToast }) {
       </div>
       <div className="card"><div className="table-scroll"><table className="tbl">
         <thead><tr>
-          <th style={{minWidth:'280px'}}>Variant / Capture / Module / Folder</th>
+          <th style={{width:'110px'}}>Variant</th>
+          <th style={{width:'150px'}}>Capture</th>
+          <th style={{minWidth:'200px'}}>Dataset folder</th>
           <th>Classes</th>
           <th className="center" style={{width:'108px'}}>Recommended</th>
           <th className="center" style={{width:'84px'}}>Uploaded</th>
           <th className="center" style={{width:'96px'}}>Annotated</th>
-          <th style={{width:'104px'}}>Modified</th><th className="actions-cell"/>
+          <th style={{width:'104px'}}>Modified</th>
         </tr></thead>
-        <tbody>{rows}</tbody>
+        <tbody>{folderRows}</tbody>
       </table></div></div>
     </div>
   );
@@ -986,7 +966,7 @@ function ModelWizard({ sets, onCancel, onFinish }) {
   const [patience,setPatience]=useState(20);
   const [epochs,setEpochs]=useState(100);
 
-  const fmap = useMemo(()=>{ const m={}; ALL_MODULES.forEach(x=>m[x.id]=generateFolders(x)); return m; },[]);
+  const fmap = useMemo(()=>{ const m={}; allModules().forEach(x=>m[x.id]=generateFolders(x)); return m; },[]);
   const typeSets = sets.filter(s=>s.type===typeId);
   const pickedModuleIds = [...new Set([...pickedSets].flatMap(sid=>(sets.find(s=>s.id===sid)?.members)||[]))];
   const folderGroups = pickedModuleIds.map(id=>({ mod:moduleById(id), folders:fmap[id] }));
@@ -1258,12 +1238,88 @@ function Placeholder({ title, icon:Ico }) {
     <h2>{title}</h2><div>Out of scope for this prototype — focus is the Training Sets ↔ Datasets ↔ AI Models flow.</div></div></div>);
 }
 
+/* ============================ Screen: Recipe Management (modules) ============================ */
+function RecipeScreen({ sets, onAdd, onDelete, showToast }) {
+  const [adding,setAdding]=useState(null);   // capId being added to
+  const [nm,setNm]=useState(''); const [ty,setTy]=useState('surface');
+  function startAdd(capId){ setAdding(capId); setNm(''); setTy('surface'); }
+  function confirmAdd(capId){ if(!nm.trim()) return; onAdd(capId,nm.trim(),ty);
+    showToast('Module added — training set config is now incomplete'); setAdding(null); setNm(''); }
+  function del(m){ onDelete(m.id);
+    showToast(isAssigned(m.id,sets)?'Module deleted — training set updated':'Module deleted'); }
+  return (
+    <div className="page">
+      <Breadcrumb items={[
+        { label:<span style={{display:'inline-flex',alignItems:'center',gap:4}}><Icons.Home style={{width:13,height:13}}/>Home</span> },
+        { label:'Variant A — Line' }, { label:'Recipe Management' }]}/>
+      <header className="page-header">
+        <div><h1>Recipe Management</h1><div className="subtitle">Captures and their inspection modules.</div></div>
+      </header>
+      <div className="banner"><Icons.Info/>
+        <span>Adding a module leaves it <b>unassigned</b>, so the Training Set configuration becomes incomplete until it's added to a set. Deleting a module that's in a training set <b>auto-updates</b> that set.</span></div>
+      {VARIANTS.map(v=>(
+        <div className="var-block" key={v.id}>
+          <div className="var-head"><Icons.Cube style={{width:15,height:15}}/><span>{v.name}</span></div>
+          {v.captures.map(c=>(
+            <div className="cap-group" key={c.id}>
+              <div className="cap-group-head" style={{cursor:'default'}}>
+                <Icons.Camera style={{width:16,height:16,color:'var(--muted)'}}/>
+                <div><div style={{fontWeight:600,fontSize:13}}>{c.name}</div><div className="cam">{c.cam}</div></div>
+                <span className="acc-spacer"/>
+                <button className="btn btn--secondary btn--sm" onClick={()=>startAdd(c.id)}><Icons.Plus className="icon"/>Add module</button>
+              </div>
+              {c.modules.map(m=>(
+                <div key={m.id} className="mod-row">
+                  <Icons.Box className="row-icon"/>
+                  <span className="m-name">{m.name}</span>
+                  <TypeBadge typeId={m.type}/>
+                  {isAssigned(m.id,sets)
+                    ? <span className="set-link"><Icons.Stack style={{width:11,height:11}}/>in a training set</span>
+                    : <span className="set-none">unassigned</span>}
+                  <span className="acc-spacer"/>
+                  <button className="icon-btn" title="Delete module" onClick={()=>del(m)} style={{color:'var(--red)'}}><Icons.Trash/></button>
+                </div>
+              ))}
+              {adding===c.id && (
+                <div className="mod-row" style={{gap:8}}>
+                  <Icons.Box className="row-icon"/>
+                  <input className="input" style={{flex:1,maxWidth:240}} autoFocus placeholder="New module name"
+                    value={nm} onChange={e=>setNm(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')confirmAdd(c.id);if(e.key==='Escape')setAdding(null);}}/>
+                  <div className="select-wrap" style={{width:170}}>
+                    <select className="input" value={ty} onChange={e=>setTy(e.target.value)}>
+                      {MODULE_TYPES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select><Icons.ChevD className="chev"/>
+                  </div>
+                  <button className="btn btn--primary btn--sm" disabled={!nm.trim()} onClick={()=>confirmAdd(c.id)}><Icons.Check className="icon"/>Add</button>
+                  <button className="btn btn--ghost btn--sm" onClick={()=>setAdding(null)}>Cancel</button>
+                </div>
+              )}
+              {c.modules.length===0 && adding!==c.id && <div className="mod-row"><span className="set-none">No modules yet.</span></div>}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ============================ App ============================ */
 function App() {
   const [section,setSection]=useState('training');
   const [sets,setSets]=useState(INITIAL_SETS);
   const [toast,setToast]=useState(null);
+  const [,setRev]=useState(0);
   const showToast=(msg)=>{ setToast(msg); setTimeout(()=>setToast(null),2200); };
+  function addModule(capId,name,type){
+    for(const v of VARIANTS) for(const c of v.captures) if(c.id===capId)
+      c.modules.push({ id:'m'+(_newModId++), type, name, folders:2, classes:DEFAULT_CLASSES[type]||['Class A','Class B'] });
+    setRev(r=>r+1);
+  }
+  function deleteModule(id){
+    for(const v of VARIANTS) for(const c of v.captures){ const i=c.modules.findIndex(m=>m.id===id); if(i>=0) c.modules.splice(i,1); }
+    setSets(prev=>prev.map(s=>({...s, members:s.members.filter(m=>m!==id)})));
+    setRev(r=>r+1);
+  }
   useEffect(()=>{ window.scrollTo({top:0}); },[section]);
   return (
     <div className="app">
@@ -1276,7 +1332,7 @@ function App() {
         {section==='training' && <TrainingSetsScreen sets={sets} setSets={setSets} showToast={showToast}/>}
         {section==='datasets' && <DatasetsScreen sets={sets} showToast={showToast}/>}
         {section==='models' && <AiModelsScreen sets={sets} showToast={showToast}/>}
-        {section==='recipe' && <Placeholder title="Recipe Management" icon={Icons.Gear}/>}
+        {section==='recipe' && <RecipeScreen sets={sets} onAdd={addModule} onDelete={deleteModule} showToast={showToast}/>}
         {section==='instances' && <InstancesScreen/>}
       </div>
       {toast && <div className="toast"><Icons.Check/>{toast}</div>}
