@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>Training Sets · Visual Inspection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root{
+  --orange:#F26522; --orange-dark:#c44e16; --orange-soft:#fde9dd;
+  --charcoal:#23262b; --muted:#8b9098; --muted-2:#b5b9bf;
+  --border:#e6e8ec; --border-strong:#d6d9de;
+  --surface:#ffffff; --bg:#f6f7f9; --bg-row-hover:#fafbfc;
+  --green:#1a8c66; --green-bg:#e3f3ec;
+  --amber:#b07314; --amber-bg:#fbeed5;
+  --red:#c4361a; --red-bg:#fbe7e2;
+  --blue:#1f4fbf; --blue-bg:#e6efff;
+  --purple:#5a31b8; --purple-bg:#eae0ff;
+  --shadow-sm:0 1px 2px rgba(20,22,26,.04);
+  --shadow-card:0 1px 2px rgba(20,22,26,.04),0 4px 14px rgba(20,22,26,.04);
+  --shadow-pop:0 8px 24px rgba(20,22,26,.12),0 2px 6px rgba(20,22,26,.06);
+  --radius:12px; --radius-sm:8px; --rail:248px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--charcoal);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;}
+.icon{width:18px;height:18px;flex:none;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+
+/* shell */
+.app{display:flex;min-height:100vh;}
+.rail{width:var(--rail);flex:none;background:#1b1e23;color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+.rail-brand{display:flex;align-items:center;gap:10px;padding:18px 18px 16px;}
+.rail-logo{width:30px;height:30px;border-radius:8px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;}
+.rail-brand .name{font-weight:700;font-size:15px;letter-spacing:.2px;}
+.rail-brand .name small{display:block;font-weight:500;font-size:10.5px;color:#9aa0a8;letter-spacing:.3px;}
+.rail-proj{margin:2px 12px 10px;padding:9px 11px;border-radius:10px;background:#24282e;display:flex;align-items:center;gap:9px;}
+.rail-proj .pj-ico{width:26px;height:26px;border-radius:7px;background:#33383f;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#cfd3d8;}
+.rail-proj .pj-meta b{font-size:12.5px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rail-proj .pj-meta span{font-size:10.5px;color:#9aa0a8;}
+.rail-sec{font-size:10px;font-weight:600;letter-spacing:.7px;color:#71777f;text-transform:uppercase;padding:12px 22px 6px;}
+.rail-nav{display:flex;flex-direction:column;gap:2px;padding:0 12px;}
+.rail-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;color:#c7ccd2;font-size:13.5px;font-weight:500;border:none;background:transparent;text-align:left;width:100%;}
+.rail-item svg{width:19px;height:19px;flex:none;opacity:.92;}
+.rail-item:hover{background:#262b31;color:#fff;}
+.rail-item.active{background:var(--orange);color:#fff;box-shadow:0 4px 12px rgba(242,101,34,.32);}
+.rail-item.active svg{opacity:1;}
+.rail-item .new-tag{margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.4px;background:rgba(255,255,255,.22);color:#fff;padding:2px 6px;border-radius:6px;text-transform:uppercase;}
+.rail-spacer{flex:1;}
+.rail-user{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid #2b3037;}
+.rail-user .avatar{width:30px;height:30px;border-radius:50%;background:#33383f;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#dfe3e7;}
+.rail-user .u-meta b{font-size:12.5px;display:block;font-weight:600;}
+.rail-user .u-meta span{font-size:10.5px;color:#9aa0a8;}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 24px;position:sticky;top:0;z-index:5;}
+.topbar .search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--muted);}
+.topbar .search input{border:none;background:transparent;outline:none;flex:1;font-size:13px;color:var(--charcoal);}
+.topbar .spacer{flex:1;}
+.icon-btn{width:34px;height:34px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;}
+.icon-btn:hover{background:var(--bg);color:var(--charcoal);}
+.page{padding:22px 28px 60px;max-width:1240px;width:100%;}
+
+.breadcrumb{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap;}
+.breadcrumb a:hover{color:var(--orange);}
+.breadcrumb .current{color:var(--charcoal);font-weight:600;}
+.breadcrumb .sep{display:inline-flex;color:var(--muted-2);}
+
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px;}
+.h1-row{display:flex;align-items:center;}
+.page-header h1{font-size:23px;font-weight:700;margin:0;letter-spacing:-.2px;}
+.page-header .subtitle{color:var(--muted);font-size:13px;max-width:620px;margin-top:3px;}
+
+.info-tip{position:relative;display:inline-flex;align-items:center;color:var(--muted-2);cursor:help;margin-left:9px;}
+.info-tip svg{width:18px;height:18px;}
+.info-tip:hover{color:var(--orange);}
+.info-tip .tip{position:absolute;top:calc(100% + 9px);left:-6px;width:312px;background:var(--charcoal);color:#fff;font-size:12px;font-weight:500;line-height:1.55;padding:11px 13px;border-radius:10px;box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .15s,transform .15s;z-index:30;}
+.info-tip .tip::before{content:"";position:absolute;top:-5px;left:12px;width:10px;height:10px;background:var(--charcoal);transform:rotate(45deg);}
+.info-tip:hover .tip{opacity:1;transform:translateY(0);}
+.info-tip .tip b{color:#ffd9c7;}
+
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:9px;font-weight:600;font-size:13px;padding:9px 15px;border:1px solid transparent;transition:background .12s,border-color .12s;}
+.btn .icon{width:16px;height:16px;}
+.btn--primary{background:var(--orange);color:#fff;box-shadow:0 1px 2px rgba(242,101,34,.3);}
+.btn--primary:hover{background:var(--orange-dark);}
+.btn--secondary{background:var(--surface);color:var(--charcoal);border-color:var(--border-strong);}
+.btn--secondary:hover{background:var(--bg);}
+.btn--ghost{background:transparent;color:var(--muted);}
+.btn--ghost:hover{background:var(--bg);color:var(--charcoal);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn--sm{padding:6px 11px;font-size:12px;}
+
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;padding:7px 11px;font-size:12.5px;color:var(--charcoal);}
+.pill:hover{border-color:var(--muted-2);}
+.pill .label-muted{color:var(--muted);}
+.pill .chev{width:14px;height:14px;color:var(--muted);}
+.spacer{flex:1;}
+.dd{position:relative;}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:190px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-pop);padding:5px;z-index:30;}
+.dd-item{display:flex;align-items:center;gap:8px;width:100%;border:none;background:transparent;text-align:left;padding:8px 10px;border-radius:7px;font-size:13px;color:var(--charcoal);}
+.dd-item:hover{background:var(--bg);}
+.dd-item.active{color:var(--orange);font-weight:600;}
+.dd-item svg{width:15px;height:15px;margin-left:auto;}
+
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--blue-bg);border:1px solid #cfe0ff;color:#23426e;border-radius:10px;padding:11px 13px;font-size:12.5px;margin-bottom:18px;line-height:1.5;}
+.banner svg{width:17px;height:17px;flex:none;margin-top:1px;color:var(--blue);}
+.banner b{font-weight:700;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-card);overflow:hidden;}
+.table-scroll{overflow-x:auto;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl thead th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--border);background:#fbfbfc;white-space:nowrap;}
+.tbl tbody td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr.clickable{cursor:pointer;}
+.tbl tbody tr.clickable:hover{background:var(--bg-row-hover);}
+.tbl .center{text-align:center;}
+.tbl .num{font-variant-numeric:tabular-nums;}
+.actions-cell{width:46px;text-align:center;}
+
+.ts-name{display:flex;flex-direction:column;gap:2px;}
+.ts-name b{font-weight:600;font-size:13.5px;}
+.ts-name span{font-size:11.5px;color:var(--muted);}
+
+.chip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.chips{display:inline-flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.type-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px;}
+.module-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:3px 8px;border-radius:7px;background:var(--bg);border:1px solid var(--border);color:var(--charcoal);white-space:nowrap;}
+.module-chip .cap{color:var(--muted);font-weight:600;font-size:10.5px;}
+.more-chip{font-size:11px;font-weight:600;color:var(--muted);padding:3px 4px;}
+.cls-chip{display:inline-flex;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:6px;}
+.set-link{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--orange-dark);background:var(--orange-soft);padding:2px 8px;border-radius:6px;}
+.set-none{font-size:11px;font-style:italic;color:var(--muted-2);}
+
+.status-pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;background:#eef0f3;color:#5a5f67;white-space:nowrap;}
+.status-pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.7;}
+.status-pill--amber{background:var(--amber-bg);color:var(--amber);}
+.status-pill--green{background:var(--green-bg);color:var(--green);}
+.status-pill--running .dot{animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+.count{font-weight:600;font-variant-numeric:tabular-nums;}
+.count--muted{color:var(--muted-2);font-weight:500;}
+.count--green{color:var(--green);}
+.count--amber{color:var(--amber);}
+.count .sep{color:var(--muted-2);margin:0 1px;font-weight:500;}
+.count .denom{color:var(--muted);font-weight:500;}
+.rec-strong{font-weight:700;color:var(--orange-dark);font-variant-numeric:tabular-nums;}
+.date-cell-sm{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+
+/* tree */
+.name-cell{display:flex;align-items:center;gap:7px;}
+.indent-2{padding-left:22px;} .indent-3{padding-left:44px;} .indent-4{padding-left:66px;}
+.row-name{font-weight:500;}
+.chev-spacer{width:20px;display:inline-block;flex:none;}
+.row-icon{width:16px;height:16px;color:var(--muted);flex:none;}
+.row-meta{font-size:10.5px;color:var(--muted-2);background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:5px;}
+.chev-btn{width:20px;height:20px;border:none;background:transparent;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex:none;}
+.chev-btn svg{width:15px;height:15px;transition:transform .15s;}
+.chev-btn.open svg{transform:rotate(90deg);}
+
+.menu{position:fixed;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-pop);padding:5px;z-index:60;}
+.menu-item{display:flex;align-items:center;gap:10px;width:100%;border:none;background:transparent;text-align:left;padding:8px 10px;border-radius:7px;font-size:13px;color:var(--charcoal);}
+.menu-item svg{width:16px;height:16px;color:var(--muted);}
+.menu-item:hover{background:var(--bg);}
+.menu-item.danger{color:var(--red);}
+.menu-item.danger svg{color:var(--red);}
+.menu-sep{height:1px;background:var(--border);margin:5px 2px;}
+
+.checkbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-strong);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;padding:0;color:#fff;flex:none;}
+.checkbox:hover{border-color:var(--muted);}
+.checkbox.checked,.checkbox.indeterminate{background:var(--orange);border-color:var(--orange);}
+.checkbox svg{width:12px;height:12px;}
+
+.empty-state{padding:54px 20px;text-align:center;color:var(--muted);}
+.empty-state .e-ico{width:46px;height:46px;border-radius:12px;background:var(--orange-soft);color:var(--orange);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.empty-state h3{margin:0 0 5px;color:var(--charcoal);font-size:15px;}
+
+.scrim{position:fixed;inset:0;background:rgba(20,22,26,.34);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;}
+.scrim.open{opacity:1;pointer-events:auto;}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:560px;max-width:94vw;background:var(--surface);z-index:50;box-shadow:-12px 0 40px rgba(20,22,26,.16);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);}
+.drawer.open{transform:translateX(0);}
+.drawer-head{display:flex;align-items:flex-start;gap:12px;padding:20px 22px 16px;border-bottom:1px solid var(--border);}
+.drawer-head .d-ico{width:38px;height:38px;border-radius:10px;background:var(--orange-soft);color:var(--orange);display:flex;align-items:center;justify-content:center;flex:none;}
+.drawer-head h2{font-size:17px;margin:0 0 2px;font-weight:700;}
+.drawer-head p{margin:0;font-size:12.5px;color:var(--muted);}
+.drawer-head .x{margin-left:auto;}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 22px;}
+.drawer-foot{border-top:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:10px;}
+.drawer-foot .spacer{flex:1;}
+
+.field{margin-bottom:18px;}
+.field>label{display:block;font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:6px;}
+.field .hint{font-size:11.5px;color:var(--muted);margin-top:5px;}
+.field .err{font-size:11.5px;color:var(--red);margin-top:5px;font-weight:500;}
+.input{width:100%;border:1px solid var(--border-strong);border-radius:9px;padding:9px 12px;font-size:13.5px;font-family:inherit;color:var(--charcoal);outline:none;background:var(--surface);}
+.input:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft);}
+.input.input--err{border-color:var(--red);}
+.select-wrap{position:relative;}
+.select-wrap .chev{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;width:16px;height:16px;}
+select.input{appearance:none;cursor:pointer;}
+
+.section-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);margin:24px 0 10px;}
+.section-label .ln{flex:1;height:1px;background:var(--border);}
+
+.summary-bar{display:flex;align-items:center;gap:10px;background:var(--orange-soft);border:1px solid #f7d3bf;border-radius:10px;padding:10px 13px;font-size:12.5px;color:var(--orange-dark);font-weight:600;margin-bottom:14px;}
+.summary-bar svg{width:17px;height:17px;}
+
+.var-block{margin-bottom:16px;}
+.var-head{display:flex;align-items:center;gap:8px;padding:4px 2px 9px;font-size:12.5px;font-weight:700;color:var(--charcoal);}
+.var-head svg{color:var(--orange);}
+.var-head .var-cnt{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted);}
+.cap-group{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.cap-group-head{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fbfbfc;cursor:pointer;}
+.cap-group-head .cam{font-size:11.5px;color:var(--muted);font-weight:500;}
+.cap-group-head .cnt{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:600;}
+.cap-group-head:hover{background:var(--bg);}
+.mod-row{display:flex;align-items:center;gap:11px;padding:9px 12px 9px 14px;border-top:1px solid var(--border);}
+.mod-row:hover{background:var(--bg-row-hover);}
+.mod-row .m-name{font-weight:500;font-size:13px;}
+.mod-row .m-meta{margin-left:auto;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.mod-row.disabled{opacity:.45;}
+.mod-row.disabled .checkbox{pointer-events:none;}
+.assigned-note{font-style:italic;font-size:11px;color:var(--muted);}
+
+.ts-pick{display:flex;align-items:center;gap:12px;padding:12px 13px;border:1px solid var(--border);border-radius:10px;margin-bottom:9px;cursor:pointer;}
+.ts-pick:hover{background:var(--bg-row-hover);}
+.ts-pick.sel{border-color:var(--orange);background:var(--orange-soft);}
+.ts-pick .tp-meta{flex:1;}
+.ts-pick .tp-meta b{font-size:13.5px;font-weight:600;display:block;}
+.ts-pick .tp-meta span{font-size:11.5px;color:var(--muted);}
+
+.reco-chip{display:inline-flex;align-items:center;gap:7px;border-radius:9px;font-weight:600;font-size:13px;padding:9px 15px;border:1px solid transparent;}
+.reco-chip .icon{width:16px;height:16px;}
+.reco-chip--grey{background:#eef0f3;color:var(--muted);cursor:not-allowed;}
+.reco-chip--green{background:var(--green);color:#fff;box-shadow:0 1px 2px rgba(26,140,102,.3);}
+.reco-chip--green:hover{background:#157254;}
+.reco-chip--amber{background:var(--amber-bg);color:var(--amber);cursor:default;}
+.reco-chip--amber .icon{animation:pulse 1s infinite;}
+.reco-chip--warn{background:var(--red-bg);color:var(--red);border-color:#f0c4ba;}
+.reco-chip--warn:hover{background:#f6d8d1;}
+.reco-msg{font-size:12px;color:var(--red);font-weight:500;max-width:330px;text-align:right;line-height:1.35;display:inline-flex;align-items:center;gap:6px;}
+.reco-msg svg{width:15px;height:15px;flex:none;}
+.cfg-marker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:9px;margin-bottom:16px;}
+.cfg-marker svg{width:16px;height:16px;flex:none;}
+.cfg-marker--ok{background:var(--green-bg);color:var(--green);}
+.cfg-marker--warn{background:var(--amber-bg);color:var(--amber);}
+.pick-hint{padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border:1px dashed var(--border-strong);border-radius:10px;}
+.demo-wrap{display:inline-flex;align-items:center;gap:7px;margin-right:auto;background:#f3effa;border:1px dashed #c9b9ec;border-radius:9px;padding:4px 6px 4px 9px;}
+.demo-wrap .demo-tag{font-size:9px;font-weight:700;letter-spacing:.5px;color:#5a31b8;display:inline-flex;align-items:center;gap:4px;}
+.demo-wrap .demo-tag svg{width:13px;height:13px;}
+/* wizard (AI Models) */
+.wiz{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-card);overflow:hidden;}
+.wiz-rail{width:240px;flex:none;background:#fbfbfc;border-right:1px solid var(--border);padding:16px 14px;}
+.wiz-step{display:flex;align-items:flex-start;gap:11px;padding:10px 9px;border-radius:9px;}
+.wiz-step .num{width:24px;height:24px;border-radius:50%;background:#eef0f3;color:var(--muted);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;}
+.wiz-step .num svg{width:14px;height:14px;}
+.wiz-step .st-meta b{font-size:13px;font-weight:600;display:block;color:var(--charcoal);}
+.wiz-step .st-meta span{font-size:11px;color:var(--muted);}
+.wiz-step.active{background:var(--orange-soft);}
+.wiz-step.active .num{background:var(--orange);color:#fff;}
+.wiz-step.done .num{background:var(--green);color:#fff;}
+.wiz-step.todo .st-meta b{color:var(--muted);}
+.wiz-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.wiz-body{flex:1;padding:24px 26px;min-height:430px;overflow-y:auto;max-height:calc(100vh - 230px);}
+.wiz-body h3{margin:0 0 4px;font-size:16px;}
+.wiz-body .step-sub{color:var(--muted);font-size:12.5px;margin-bottom:20px;}
+.wiz-foot{border-top:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:10px;}
+.wiz-foot .spacer{flex:1;}
+.prefix-input{display:flex;align-items:center;border:1px solid var(--border-strong);border-radius:9px;overflow:hidden;}
+.prefix-input .pfx{background:var(--bg);padding:9px 11px;font-size:13px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);}
+.prefix-input input{border:none;outline:none;flex:1;padding:9px 12px;font-size:13.5px;font-family:inherit;}
+textarea.input{resize:vertical;min-height:64px;}
+.aug-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.aug-item{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;cursor:pointer;}
+.aug-item:hover{background:var(--bg-row-hover);}
+.aug-item.on{border-color:var(--orange);background:var(--orange-soft);}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.review-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.review-row:last-child{border:none;}
+.review-row .rk{width:160px;color:var(--muted);font-weight:600;flex:none;}
+.ds-mod{font-size:12px;font-weight:700;color:var(--charcoal);margin:14px 0 7px;display:flex;align-items:center;gap:7px;}
+.ds-mod svg{width:15px;height:15px;color:var(--muted);}
+.ds-folder{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:7px;font-size:13px;}
+/* instances: stages + model selection */
+.stage-rail{display:flex;align-items:center;gap:5px;margin-bottom:20px;flex-wrap:wrap;}
+.stage{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);padding:6px 11px;border-radius:8px;background:var(--surface);border:1px solid var(--border);}
+.stage .sn{width:18px;height:18px;border-radius:50%;background:#eef0f3;color:var(--muted);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
+.stage .sn svg{width:11px;height:11px;}
+.stage.active{color:var(--orange-dark);background:var(--orange-soft);border-color:#f7d3bf;}
+.stage.active .sn{background:var(--orange);color:#fff;}
+.stage.done .sn{background:var(--green);color:#fff;}
+.stage-sep{color:var(--muted-2);}
+.acc{border:1px solid var(--border);border-radius:11px;margin-bottom:12px;overflow:hidden;}
+.acc-head{display:flex;align-items:center;gap:9px;padding:12px 14px;background:#fbfbfc;cursor:pointer;}
+.acc-head:hover{background:var(--bg);}
+.acc-title{font-weight:600;font-size:13.5px;}
+.acc-chip{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:6px;white-space:nowrap;}
+.acc-spacer{flex:1;}
+.acc-icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);}
+.acc-icon-btn:hover{color:var(--orange);border-color:var(--orange-soft);background:var(--orange-soft);}
+.acc-icon-btn.on{color:var(--orange);border-color:var(--orange);background:var(--orange-soft);}
+.acc-icon-btn .ai-tip{position:absolute;top:calc(100% + 7px);right:0;width:236px;background:var(--charcoal);color:#fff;font-size:11.5px;font-weight:500;padding:8px 10px;border-radius:8px;box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;transform:translateY(-3px);transition:.15s;z-index:30;line-height:1.4;text-align:left;}
+.acc-icon-btn:hover .ai-tip{opacity:1;transform:translateY(0);}
+.acc-body{padding:6px 14px 14px;}
+.model-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--border);border-radius:9px;margin-top:8px;cursor:pointer;}
+.model-row:hover{background:var(--bg-row-hover);}
+.model-row.sel{border-color:var(--orange);background:var(--orange-soft);}
+.model-row .mr-meta{flex:1;min-width:0;}
+.model-row .mr-meta b{font-size:13px;font-weight:600;display:block;}
+.model-row .mr-meta span{font-size:11px;color:var(--muted);}
+.radio{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-strong);flex:none;display:inline-flex;align-items:center;justify-content:center;}
+.radio.on{border-color:var(--orange);}
+.radio.on::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--orange);}
+.latest-tag{font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);padding:2px 7px;border-radius:5px;white-space:nowrap;}
+.other-divider{display:flex;align-items:center;gap:9px;margin:15px 2px 2px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.other-divider .ln{flex:1;height:1px;background:var(--border);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow-pop);z-index:80;display:flex;align-items:center;gap:9px;}
+.toast svg{width:17px;height:17px;color:#5fd0a3;}
+.placeholder{padding:80px 20px;text-align:center;color:var(--muted);}
+.placeholder .e-ico{width:52px;height:52px;border-radius:14px;background:var(--bg);color:var(--muted-2);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid var(--border);}
+.placeholder h2{margin:0 0 6px;color:var(--charcoal);font-size:18px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/jsx-source" id="app-src">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+/* ============================ Icons ============================ */
+const svg = (children, vb='0 0 24 24') => ({className='icon', size, style, ...rest}) =>
+  React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', viewBox:vb,
+    width:size||undefined, height:size||undefined, fill:'none', stroke:'currentColor',
+    strokeWidth:1.8, strokeLinecap:'round', strokeLinejoin:'round', className, style, ...rest}, children);
+const P = (d) => React.createElement('path',{d,key:d.slice(0,8)});
+const Icons = {
+  Gear: svg([P('M12 15a3 3 0 100-6 3 3 0 000 6z'),P('M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 110-4h.09A1.65 1.65 0 003.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H8a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V8a1.65 1.65 0 001.51 1H22a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z')]),
+  Stack: svg([P('M12 2 2 7l10 5 10-5-10-5z'),P('M2 17l10 5 10-5'),P('M2 12l10 5 10-5')]),
+  Tag: svg([P('M6 6h.01'),P('M19.59 12.41 12.42 19.58a2 2 0 01-2.83 0L1 11V1h10l8.59 8.59a2 2 0 010 2.82z')]),
+  Chip: svg([P('M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3'),P('M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2zM9 9h6v6H9z')]),
+  Bolt: svg([P('M11 1 1 13h9l-1 8 10-12h-9l1-8z')]),
+  Plus: svg([P('M12 5v14M5 12h14')]),
+  ChevR: svg([P('M9 6l6 6-6 6')]),
+  ChevD: svg([P('M6 9l6 6 6-6')]),
+  Dots: svg([P('M12 5h.01M12 12h.01M12 19h.01')]),
+  Search: svg([P('M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3')]),
+  Bell: svg([P('M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0')]),
+  X: svg([P('M18 6 6 18M6 6l12 12')]),
+  Check: svg([P('M20 6 9 17l-5-5')]),
+  Wand: svg([P('M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h0M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5')]),
+  Trash: svg([P('M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2')]),
+  Copy: svg([P('M20 9H11a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-9a2 2 0 00-2-2z'),P('M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1')]),
+  Pencil: svg([P('M17 3a2.83 2.83 0 014 4L7.5 20.5 2 22l1.5-5.5L17 3z')]),
+  Camera: svg([P('M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z'),P('M12 17a4 4 0 100-8 4 4 0 000 8z')]),
+  Home: svg([P('M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'),P('M9 22V12h6v10')]),
+  Info: svg([P('M12 22a10 10 0 100-20 10 10 0 000 20zM12 16v-4M12 8h.01')]),
+  Layers: svg([P('M12 2 2 7l10 5 10-5-10-5z'),P('M2 17l10 5 10-5'),P('M2 12l10 5 10-5')]),
+  Cube: svg([P('M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z'),P('M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12')]),
+  Folder: svg([P('M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z')]),
+  Box: svg([P('M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z')]),
+  Alert: svg([P('M10.29 3.86 1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'),P('M12 9v4M12 17h.01')]),
+  Flask: svg([P('M9 3h6M10 3v6.5L4.6 18A2 2 0 006.3 21h11.4a2 2 0 001.7-3L14 9.5V3')]),
+};
+
+/* ============================ Data ============================ */
+const MODULE_TYPES = [
+  { id:'surface',  name:'Surface Defect',     color:{bg:'var(--blue-bg)',  fg:'var(--blue)'} },
+  { id:'bead',     name:'Bead Inspection',    color:{bg:'var(--orange-soft)',fg:'var(--orange-dark)'} },
+  { id:'ocr',      name:'OCR / Text',         color:{bg:'var(--purple-bg)',fg:'var(--purple)'} },
+  { id:'presence', name:'Presence / Absence', color:{bg:'var(--green-bg)', fg:'var(--green)'} },
+  { id:'dim',      name:'Dimension',          color:{bg:'#fdeccf',         fg:'var(--amber)'} },
+];
+const typeById = (id) => MODULE_TYPES.find(t => t.id === id) || {name:id,color:{bg:'#eef0f3',fg:'#5a5f67'}};
+
+const VARIANTS = [
+  { id:'var-a', name:'Variant A', captures:[
+      { id:'cap1', name:'Capture 1', cam:'Top camera', modules:[
+          { id:'m1', type:'surface',  name:'Top Surface Defect', folders:3, classes:['Scratch','Dent','Stain'] },
+          { id:'m2', type:'bead',     name:'Seal Bead',          folders:2, classes:['Bead OK','Gap'] },
+          { id:'m3', type:'ocr',      name:'Lot Code OCR',       folders:2, classes:['Digits'] },
+      ]},
+      { id:'cap2', name:'Capture 2', cam:'Side camera', modules:[
+          { id:'m4', type:'surface',  name:'Side Surface Defect',folders:2, classes:['Scratch','Stain'] },
+          { id:'m5', type:'presence', name:'Cap Presence',       folders:2, classes:['Present','Absent'] },
+      ]},
+      { id:'cap3', name:'Capture 3', cam:'Bottom camera', modules:[
+          { id:'m6', type:'surface',  name:'Base Surface Defect',folders:3, classes:['Scratch','Dent'] },
+          { id:'m7', type:'dim',      name:'Base Diameter',      folders:1, classes:['In tol','Out of tol'] },
+      ]},
+  ]},
+  { id:'var-b', name:'Variant B', captures:[
+      { id:'cap4', name:'Capture 1', cam:'Top camera', modules:[
+          { id:'m8', type:'surface',  name:'Top Surface Defect', folders:2, classes:['Scratch','Dent'] },
+          { id:'m9', type:'bead',     name:'Rim Bead',           folders:2, classes:['Bead OK','Gap'] },
+      ]},
+      { id:'cap5', name:'Capture 2', cam:'Front camera', modules:[
+          { id:'m10', type:'surface', name:'Front Surface Defect',folders:3, classes:['Scratch','Stain','Crack'] },
+          { id:'m11', type:'ocr',     name:'Batch Code OCR',      folders:1, classes:['Digits','Alpha'] },
+      ]},
+  ]},
+];
+const ALL_MODULES = VARIANTS.flatMap(v => v.captures.flatMap(c =>
+  c.modules.map(m => ({...m, varId:v.id, varName:v.name, capId:c.id, capName:c.name, cam:c.cam}))));
+const moduleById = (id) => ALL_MODULES.find(m => m.id === id);
+
+let _tsId = 100;
+const INITIAL_SETS = [
+  { id:'ts-1', name:'Surface Defect — All lines', type:'surface', members:['m1','m4','m6','m8','m10'], modified:'2026-06-24', created:'2026-06-10' },
+  { id:'ts-2', name:'Seal Bead — Variant A', type:'bead', members:['m2'], modified:'2026-06-20', created:'2026-06-12' },
+  { id:'ts-3', name:'Lot Code OCR — All lines', type:'ocr', members:['m3','m11'], modified:'2026-06-18', created:'2026-06-15' },
+];
+// Trained models. `modules` = snapshot of module ids the training actually CONSIDERED
+// (i.e. those modules' datasets were in the training set used at train time).
+let _modId = 50;
+const INITIAL_MODELS = [
+  { id:'mdl-s3', name:'ODC_Surface Defect v3', type:'surface', set:'Surface Defect — All lines', modules:['m1','m4','m6','m8','m10'], trainedAt:'2026-06-25', status:'trained', acc:'98.2%', images:1280 },
+  { id:'mdl-s2', name:'ODC_Surface Defect v2', type:'surface', set:'Surface Defect — Variant A', modules:['m1','m6'], trainedAt:'2026-05-30', status:'trained', acc:'96.1%', images:820 },
+  { id:'mdl-s1', name:'ODC_Surface Defect v1', type:'surface', set:'Side Surface — C2', modules:['m4'], trainedAt:'2026-04-15', status:'trained', acc:'93.0%', images:410 },
+  { id:'mdl-b2', name:'ODC_Rim Bead v2', type:'bead', set:'Rim Bead — Variant B', modules:['m9'], trainedAt:'2026-06-10', status:'trained', acc:'97.0%', images:540 },
+  { id:'mdl-b1', name:'ODC_Seal Bead v1', type:'bead', set:'Seal Bead — Variant A', modules:['m2'], trainedAt:'2026-05-05', status:'trained', acc:'95.4%', images:300 },
+  { id:'mdl-o2', name:'OCR-D_Code OCR v2', type:'ocr', set:'Lot Code OCR — All lines', modules:['m3','m11'], trainedAt:'2026-06-20', status:'trained', acc:'99.1%', images:620 },
+  { id:'mdl-o1', name:'OCR-D_Batch OCR v1', type:'ocr', set:'Batch OCR — Variant B', modules:['m11'], trainedAt:'2026-05-01', status:'trained', acc:'98.0%', images:280 },
+];
+
+const setForModule = (mid, sets) => sets.find(s => s.members.includes(mid));
+const isAssigned = (mid, sets) => sets.some(s => s.members.includes(mid));
+const modelClasses = (m) => [...new Set(m.modules.flatMap(id=>moduleById(id)?.classes||[]))];
+// models of the same module type as `mod`, split by whether they considered it
+function modelsForModule(mod, models){
+  const sameType = models.filter(x=>x.type===mod.type && x.status==='trained');
+  const considered = sameType.filter(x=>x.modules.includes(mod.id)).sort((a,b)=>b.trainedAt.localeCompare(a.trainedAt));
+  const others     = sameType.filter(x=>!x.modules.includes(mod.id)).sort((a,b)=>b.trainedAt.localeCompare(a.trainedAt));
+  return { considered, others, latest: considered[0] || null };
+}
+
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
+function generateFolders(m){
+  const base=hashStr(m.id); const arr=[];
+  for(let i=0;i<m.folders;i++){
+    const uploaded = 50 + (base + i*53)%150;
+    const annotated = Math.round(uploaded * (((base+i*17)%45)+45)/100);
+    arr.push({ id:m.id+'-f'+(i+1), name:'Folder '+(i+1), uploaded, annotated, classes:m.classes, idx:i });
+  }
+  return arr;
+}
+// recommended images for one folder, given the size of the training set it feeds
+function recForFolder(classesLen, k, idx){
+  const baseV = 120 + classesLen*80;
+  const spread = 1 + (k-1)*0.12;
+  const jitter = (idx*37)%60;
+  return Math.round((baseV*spread+jitter)/10)*10;
+}
+
+const CLS_PALETTE=[['#e6efff','#1f4fbf'],['#eae0ff','#5a31b8'],['#dff4ec','#117a55'],['#fde3cf','#a04a10'],['#fbeed5','#b07314'],['#fbe7e2','#c4361a']];
+function clsColor(name){ const h=hashStr(name); return CLS_PALETTE[h%CLS_PALETTE.length]; }
+
+/* ============================ Primitives ============================ */
+function Checkbox({ checked, indeterminate, onChange }) {
+  const cls = indeterminate ? 'checkbox indeterminate' : (checked ? 'checkbox checked' : 'checkbox');
+  return (
+    <button className={cls} role="checkbox" aria-checked={indeterminate?'mixed':!!checked}
+      onClick={(e)=>{e.stopPropagation(); onChange?.(e);}}>
+      {checked && !indeterminate && <Icons.Check />}
+    </button>
+  );
+}
+function Breadcrumb({ items }) {
+  return (
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      {items.map((it,i)=>{ const last=i===items.length-1; return (
+        <React.Fragment key={i}>
+          {i>0 && <span className="sep"><Icons.ChevR style={{width:12,height:12}}/></span>}
+          {it.onClick && !last ? <a href="#" onClick={(e)=>{e.preventDefault();it.onClick();}}>{it.label}</a>
+            : <span className={last?'current':''}>{it.label}</span>}
+        </React.Fragment>);})}
+    </nav>
+  );
+}
+function useOutside(ref, cb){
+  useEffect(()=>{ function h(e){ if(ref.current && !ref.current.contains(e.target)) cb?.(); }
+    document.addEventListener('mousedown',h); return ()=>document.removeEventListener('mousedown',h); },[cb]);
+}
+function Dropdown({ label, value, options, onChange }) {
+  const [open,setOpen]=useState(false); const ref=useRef(null);
+  useOutside(ref, useCallback(()=>setOpen(false),[]));
+  return (
+    <div className="dd" ref={ref}>
+      <button className="pill" onClick={()=>setOpen(o=>!o)}>
+        <span className="label-muted">{label}:</span><span>{value}</span><Icons.ChevD className="chev"/>
+      </button>
+      {open && <div className="dd-menu">
+        {options.map(o=>(
+          <button key={o} className={o===value?'dd-item active':'dd-item'} onClick={()=>{onChange(o);setOpen(false);}}>
+            {o}{o===value && <Icons.Check/>}
+          </button>))}
+      </div>}
+    </div>
+  );
+}
+function TypeBadge({ typeId }) {
+  const t = typeById(typeId);
+  return <span className="type-badge" style={{background:t.color.bg,color:t.color.fg}}>{t.name}</span>;
+}
+function ClassChips({ classes }) {
+  return <span className="chips">{classes.map(c=>{ const [bg,fg]=clsColor(c);
+    return <span key={c} className="cls-chip" style={{background:bg,color:fg}}>{c}</span>; })}</span>;
+}
+function RowMenu({ items, onClose, anchorRef }) {
+  const ref = useRef(null); const [pos,setPos]=useState(null);
+  useOutside(ref,onClose);
+  useEffect(()=>{ function place(){ const el=anchorRef.current; if(!el) return;
+      const r=el.getBoundingClientRect(); let left=r.right-200; if(left<8) left=8;
+      let top=r.bottom+6; if(top+180>window.innerHeight) top=r.top-6-items.length*38; setPos({top,left}); }
+    place(); window.addEventListener('scroll',place,true); window.addEventListener('resize',place);
+    return ()=>{window.removeEventListener('scroll',place,true);window.removeEventListener('resize',place);}; },[]);
+  useEffect(()=>{ function k(e){if(e.key==='Escape')onClose?.();} document.addEventListener('keydown',k);
+    return ()=>document.removeEventListener('keydown',k);},[]);
+  if(!pos) return null;
+  return (
+    <div className="menu" ref={ref} role="menu" style={{top:pos.top,left:pos.left}} onClick={(e)=>e.stopPropagation()}>
+      {items.map((it,i)=> it==='sep' ? <div className="menu-sep" key={'s'+i}/>
+        : <button key={it.label} className={it.danger?'menu-item danger':'menu-item'}
+            onClick={()=>{it.onSelect?.();onClose?.();}} role="menuitem">{it.icon && <it.icon/>}<span>{it.label}</span></button>)}
+    </div>
+  );
+}
+function UploadedCount({ uploaded, recommended }) {
+  if(recommended == null) return <span className="count">{uploaded}</span>;
+  const cls = uploaded >= recommended ? 'count count--green' : 'count count--amber';
+  return <span className={cls}>{uploaded}</span>;
+}
+function AnnotatedCount({ annotated, total }) {
+  if(!total) return <span className="count count--muted">—</span>;
+  const cls = annotated >= total ? 'count count--green' : 'count count--amber';
+  return <span className={cls}>{annotated}<span className="sep">/</span><span className="denom">{total}</span></span>;
+}
+
+/* ============================ Sidebar ============================ */
+function Sidebar({ section, onNavigate }) {
+  const nav = [
+    { id:'recipe',   name:'Recipe Management',        icon:Icons.Gear },
+    { id:'training', name:'Training Sets',            icon:Icons.Stack, isNew:true },
+    { id:'datasets', name:'Datasets and Annotations', icon:Icons.Tag },
+    { id:'models',   name:'AI Models',                icon:Icons.Chip },
+    { id:'instances',name:'Instances',                icon:Icons.Bolt },
+  ];
+  return (
+    <aside className="rail">
+      <div className="rail-brand">
+        <div className="rail-logo"><Icons.Cube size={18}/></div>
+        <div className="name">FrinksVision<small>Visual Inspection</small></div>
+      </div>
+      <div className="rail-proj">
+        <div className="pj-ico">VA</div>
+        <div className="pj-meta"><b>Variant A — Line</b><span>Project · Bottle QA</span></div>
+      </div>
+      <div className="rail-sec">Workspace</div>
+      <nav className="rail-nav">
+        {nav.map(n=>(
+          <button key={n.id} className={section===n.id?'rail-item active':'rail-item'} onClick={()=>onNavigate(n.id)}>
+            <n.icon/><span>{n.name}</span>{n.isNew && <span className="new-tag">new</span>}
+          </button>))}
+      </nav>
+      <div className="rail-spacer"/>
+      <div className="rail-user">
+        <div className="avatar">QA</div>
+        <div className="u-meta"><b>QA Engineer</b><span>vision-admin</span></div>
+      </div>
+    </aside>
+  );
+}
+
+/* ============================ Module picker (drawer) ============================ */
+function ModulePicker({ typeId, selected, onToggle, sets }) {
+  const allCapIds = VARIANTS.flatMap(v=>v.captures.map(c=>c.id));
+  const [open, setOpen] = useState(() => new Set(allCapIds));
+  const toggleCap = (id)=>setOpen(p=>{const n=new Set(p); n.has(id)?n.delete(id):n.add(id); return n;});
+  return (
+    <div>
+      {VARIANTS.map(variant=>{
+        const varMatch = variant.captures.reduce((a,c)=>a+c.modules.filter(m=>m.type===typeId).length,0);
+        return (
+        <div className="var-block" key={variant.id}>
+          <div className="var-head"><Icons.Cube style={{width:15,height:15}}/><span>{variant.name}</span>
+            <span className="var-cnt">{varMatch} {typeById(typeId).name} module{varMatch!==1?'s':''}</span></div>
+          {variant.captures.map(cap=>{
+            const matching = cap.modules.filter(m=>m.type===typeId);
+            const isOpen = open.has(cap.id);
+            const selInCap = matching.filter(m=>selected.has(m.id)).length;
+            return (
+              <div className="cap-group" key={cap.id}>
+                <div className="cap-group-head" onClick={()=>toggleCap(cap.id)}>
+                  <button className={isOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
+                  <Icons.Camera style={{width:16,height:16,color:'var(--muted)'}}/>
+                  <div><div style={{fontWeight:600,fontSize:13}}>{cap.name}</div><div className="cam">{cap.cam}</div></div>
+                  <span className="cnt">{selInCap}/{matching.length} of type</span>
+                </div>
+                {isOpen && cap.modules.map(m=>{
+                  const eligible = m.type===typeId;
+                  const checked = selected.has(m.id);
+                  const assigned = isAssigned(m.id, sets);
+                  return (
+                    <div key={m.id} className={eligible?'mod-row':'mod-row disabled'} onClick={()=>eligible && onToggle(m.id)}>
+                      <Checkbox checked={checked} onChange={()=>eligible && onToggle(m.id)} />
+                      <span className="m-name">{m.name}</span>
+                      {eligible && assigned && <span className="assigned-note">(training set already assigned)</span>}
+                      <TypeBadge typeId={m.type}/>
+                      <span className="m-meta">{m.folders} folders</span>
+                    </div>);
+                })}
+              </div>);
+          })}
+        </div>);
+      })}
+    </div>
+  );
+}
+
+/* ============================ Training set drawer ============================ */
+function TrainingSetDrawer({ open, initial, sets, onClose, onSave }) {
+  const isEdit = !!(initial && initial.id);
+  const [name, setName] = useState('');
+  const [typeId, setTypeId] = useState('');
+  const [selected, setSelected] = useState(()=>new Set());
+  useEffect(()=>{ if(!open) return;
+    setName(initial?.name || ''); setTypeId(initial?.type || ''); setSelected(new Set(initial?.members || []));
+  },[open, initial]);
+  function changeType(t){ setTypeId(t);
+    setSelected(prev=>{ const n=new Set(); prev.forEach(id=>{ if(moduleById(id)?.type===t) n.add(id); }); return n; }); }
+  function toggle(id){ setSelected(prev=>{ const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; }); }
+
+  const memberList = [...selected];
+  const capCount = new Set(memberList.map(id=>moduleById(id)?.capId)).size;
+  const varCount = new Set(memberList.map(id=>moduleById(id)?.varId)).size;
+  const dupe = !!name.trim() && sets.some(s => s.id!==initial?.id && s.name.trim().toLowerCase()===name.trim().toLowerCase());
+  const canSave = name.trim() && typeId && memberList.length && !dupe;
+
+  return (
+    <>
+      <div className={open?'scrim open':'scrim'} onClick={onClose}/>
+      <aside className={open?'drawer open':'drawer'} role="dialog" aria-modal="true">
+        <div className="drawer-head">
+          <div className="d-ico"><Icons.Stack size={20}/></div>
+          <div><h2>{isEdit?'Edit training set':'Create training set'}</h2>
+            <p>Group same-type modules across captures and variants into one training job.</p></div>
+          <button className="icon-btn x" onClick={onClose}><Icons.X/></button>
+        </div>
+        <div className="drawer-body">
+          <div className="field">
+            <label>Training set name</label>
+            <input className={dupe?'input input--err':'input'} placeholder="e.g. Surface Defect — Line A"
+              value={name} onChange={e=>setName(e.target.value)} />
+            {dupe && <div className="err">A training set with this name already exists.</div>}
+          </div>
+          <div className="field">
+            <label>Module type</label>
+            <div className="select-wrap">
+              <select className="input" value={typeId} onChange={e=>changeType(e.target.value)}>
+                <option value="">Select module type…</option>
+                {MODULE_TYPES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+              </select><Icons.ChevD className="chev"/>
+            </div>
+            <div className="hint">{typeId
+              ? <>A training job trains modules of one type. Only {typeById(typeId).name} modules can be added below.</>
+              : <>A training job trains modules of one type. Pick a type to choose its modules.</>}</div>
+          </div>
+          <div className="section-label">Select modules <span className="ln"/></div>
+          {typeId ? (<>
+            <div className="summary-bar"><Icons.Layers/>
+              {memberList.length
+                ? <span>{memberList.length} module{memberList.length>1?'s':''} · {capCount} capture{capCount>1?'s':''} · {varCount} variant{varCount>1?'s':''} selected</span>
+                : <span>No modules selected yet — pick {typeById(typeId).name} modules from the captures below.</span>}
+            </div>
+            <ModulePicker typeId={typeId} selected={selected} onToggle={toggle} sets={sets} />
+          </>) : (
+            <div className="pick-hint">Select a module type above to see the modules you can add.</div>
+          )}
+          <div className="banner" style={{marginTop:18,marginBottom:0}}><Icons.Info/>
+            <span>Once saved, the <b>Data Recommender</b> uses this set to size each dataset folder — recommended counts appear in <b>Datasets &amp; Annotations</b>.</span></div>
+        </div>
+        <div className="drawer-foot">
+          <button className="btn btn--ghost" onClick={onClose}>Cancel</button>
+          <div className="spacer"/>
+          <button className="btn btn--primary" disabled={!canSave}
+            onClick={()=>onSave({ id:initial?.id, name:name.trim(), type:typeId, members:memberList })}>
+            <Icons.Check className="icon"/>{isEdit?'Save changes':'Create training set'}
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+/* ============================ Screen: Training Sets ============================ */
+function MemberChips({ members }) {
+  const mods = members.map(moduleById).filter(Boolean); const show = mods.slice(0,4);
+  return (<span className="chips">
+    {show.map(m=>(<span className="module-chip" key={m.id}>{m.varName} - {m.capName} - {m.name}</span>))}
+    {mods.length>4 && <span className="more-chip">+{mods.length-4} more</span>}
+  </span>);
+}
+function TrainingSetsScreen({ sets, setSets, showToast }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [openMenu, setOpenMenu] = useState(null);
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [varFilter, setVarFilter] = useState('All');
+
+  function openCreate(){ setEditing(null); setDrawerOpen(true); }
+  function openEdit(ts){ setEditing(ts); setDrawerOpen(true); }
+  function save(ts){
+    setSets(prev=>{
+      if(ts.id) return prev.map(x=>x.id===ts.id?{...x,...ts,modified:'2026-06-29'}:x);
+      return [{...ts,id:'ts-'+(_tsId++),created:'2026-06-29',modified:'2026-06-29'}, ...prev];
+    });
+    setDrawerOpen(false); showToast(ts.id?'Training set updated':'Training set created');
+  }
+  function remove(id){ setSets(prev=>prev.filter(x=>x.id!==id)); showToast('Training set deleted'); }
+  function duplicate(ts){ setSets(prev=>[{...ts,id:'ts-'+(_tsId++),name:ts.name+' (copy)',created:'2026-06-29',modified:'2026-06-29'}, ...prev]); showToast('Training set duplicated'); }
+
+  const filtered = sets.filter(ts=>{
+    if(typeFilter!=='All' && typeById(ts.type).name!==typeFilter) return false;
+    if(varFilter!=='All'){ const vs=new Set(ts.members.map(id=>moduleById(id)?.varName)); if(!vs.has(varFilter)) return false; }
+    return true;
+  });
+  const unassigned = ALL_MODULES.filter(m=>!isAssigned(m.id, sets));
+  const configComplete = unassigned.length===0;
+
+  function MenuCell({ ts }) {
+    const ref = useRef(null); const isOpen = openMenu===ts.id;
+    return (<td className="actions-cell">
+      <button ref={ref} className="icon-btn" onClick={(e)=>{e.stopPropagation();setOpenMenu(isOpen?null:ts.id);}}><Icons.Dots/></button>
+      {isOpen && <RowMenu anchorRef={ref} onClose={()=>setOpenMenu(null)} items={[
+        { label:'Edit', icon:Icons.Pencil, onSelect:()=>openEdit(ts) },
+        { label:'Duplicate', icon:Icons.Copy, onSelect:()=>duplicate(ts) },
+        'sep', { label:'Delete', icon:Icons.Trash, danger:true, onSelect:()=>remove(ts.id) },
+      ]}/>}
+    </td>);
+  }
+
+  return (
+    <div className="page">
+      <Breadcrumb items={[
+        { label:<span style={{display:'inline-flex',alignItems:'center',gap:4}}><Icons.Home style={{width:13,height:13}}/>Home</span> },
+        { label:'Variant A — Line' }, { label:'Training Sets' }]}/>
+      <header className="page-header">
+        <div className="h1-row">
+          <h1>Training Sets</h1>
+          <span className="info-tip"><Icons.Info/>
+            <span className="tip">Specify the modules that would be trained together here. This is required to run the <b>Data Recommender</b> (in the Datasets &amp; Annotations section).</span>
+          </span>
+        </div>
+        <button className="btn btn--primary" onClick={openCreate}><Icons.Plus className="icon"/>Create training set</button>
+      </header>
+      {configComplete
+        ? <div className="cfg-marker cfg-marker--ok"><Icons.Check/>Configuration complete — every module belongs to a training set. The Data Recommender can run.</div>
+        : <div className="cfg-marker cfg-marker--warn"><Icons.Alert/>Configuration incomplete — {unassigned.length} module{unassigned.length!==1?'s':''} not in any training set. Assign {unassigned.length!==1?'them':'it'} to enable the Data Recommender.</div>}
+      <div className="filter-bar">
+        <Dropdown label="Variant" value={varFilter} options={['All',...VARIANTS.map(v=>v.name)]} onChange={setVarFilter}/>
+        <Dropdown label="Module type" value={typeFilter} options={['All',...MODULE_TYPES.map(t=>t.name)]} onChange={setTypeFilter}/>
+        <div className="spacer"/>
+        <span style={{fontSize:12.5,color:'var(--muted)'}}>{filtered.length} of {sets.length} training set{sets.length!==1?'s':''}</span>
+      </div>
+      <div className="card">
+        {sets.length===0 ? (
+          <div className="empty-state"><div className="e-ico"><Icons.Stack size={22}/></div>
+            <h3>No training sets yet</h3><div>Create one to group modules for training and the Data Recommender.</div></div>
+        ) : filtered.length===0 ? (
+          <div className="empty-state"><div className="e-ico"><Icons.Search size={22}/></div>
+            <h3>No training sets match these filters</h3><div>Try a different variant or module type.</div></div>
+        ) : (
+          <div className="table-scroll"><table className="tbl">
+            <thead><tr>
+              <th style={{width:'20%'}}>Training set</th><th style={{width:'150px'}}>Module type</th>
+              <th>Modules <span style={{textTransform:'none',fontWeight:500,color:'var(--muted-2)'}}>(Variant - Capture - Module)</span></th>
+              <th style={{width:'112px'}}>Modified</th><th className="actions-cell"/>
+            </tr></thead>
+            <tbody>
+              {filtered.map(ts=>(
+                <tr key={ts.id} className="clickable" onClick={()=>openEdit(ts)}>
+                  <td><div className="ts-name"><b>{ts.name}</b><span>{ts.members.length} module{ts.members.length!==1?'s':''}</span></div></td>
+                  <td><TypeBadge typeId={ts.type}/></td>
+                  <td><MemberChips members={ts.members}/></td>
+                  <td><span className="date-cell-sm">{ts.modified}</span></td>
+                  <MenuCell ts={ts}/>
+                </tr>
+              ))}
+            </tbody>
+          </table></div>
+        )}
+      </div>
+      <TrainingSetDrawer open={drawerOpen} initial={editing} sets={sets} onClose={()=>setDrawerOpen(false)} onSave={save}/>
+    </div>
+  );
+}
+
+/* ============================ Screen: Datasets & Annotations ============================ */
+// Single recommender control — one chip, state-driven.
+const RECO_STATES = {
+  incomplete:    { cls:'grey',  icon:'Wand',  label:'Recommender - Run', disabled:true },
+  ready:         { cls:'green', icon:'Wand',  label:'Recommender - Run' },
+  running:       { cls:'amber', icon:'Wand',  label:'Recommender - Running…', disabled:true },
+  done:          { cls:'green', icon:'Check', label:'Recommender - Results Generated' },
+  'outdated-cap':{ cls:'warn',  icon:'Alert', label:'Recommender - Rerun' },
+  'outdated-both':{cls:'warn',  icon:'Alert', label:'Recommender - Rerun' },
+};
+const RECO_MSG = {
+  incomplete:'Complete Capture and Training Set Configuration',
+  'outdated-cap':'Captures have been updated. Update the TS and rerun reco.',
+  'outdated-both':'Captures and TS have been updated. Click to rerun reco.',
+};
+function RecoChip({ state, onClick }) {
+  const c = RECO_STATES[state] || RECO_STATES.ready;
+  const Ico = Icons[c.icon];
+  return (
+    <button className={'reco-chip reco-chip--'+c.cls} disabled={c.disabled}
+      title={RECO_MSG[state]||''} onClick={c.disabled?undefined:onClick}>
+      <Ico className="icon"/>{c.label}
+    </button>
+  );
+}
+const DEMO_OPTS = [
+  ['Auto (live)','auto'],['Incomplete (greyed)','incomplete'],['To be run','ready'],
+  ['Running','running'],['View results','done'],
+  ['Outdated · captures changed','outdated-cap'],['Outdated · captures + TS changed','outdated-both'],
+];
+function DatasetsScreen({ sets, showToast }) {
+  const [running,setRunning]=useState(false);
+  const [recoRun,setRecoRun]=useState(false);
+  const [demoLabel,setDemoLabel]=useState('Auto (live)');
+  const [expanded,setExpanded]=useState(()=>new Set(['var-a','cap1','m1']));
+  const timer=useRef(null);
+  const toggle=(id)=>setExpanded(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
+  useEffect(()=>()=>{ if(timer.current)clearTimeout(timer.current); },[]);
+
+  const configComplete = ALL_MODULES.every(m=>isAssigned(m.id, sets));
+  const demo = (DEMO_OPTS.find(d=>d[0]===demoLabel)||['',''])[1];
+
+  // effective recommender state
+  let st;
+  if(demo!=='auto') st = demo;
+  else if(!configComplete) st = 'incomplete';
+  else if(running) st = 'running';
+  else if(recoRun) st = 'done';
+  else st = 'ready';
+
+  const showRec = st==='done' || st==='outdated-cap' || st==='outdated-both';
+  function onChip(){
+    if(st==='done'){ showToast('Showing latest recommendations'); return; }
+    if(st==='ready' || st==='outdated-cap' || st==='outdated-both'){
+      setDemoLabel('Auto (live)'); setRunning(true);
+      if(timer.current)clearTimeout(timer.current);
+      timer.current=setTimeout(()=>{ setRunning(false); setRecoRun(true); },1500);
+    }
+  }
+  function onStop(){
+    if(timer.current)clearTimeout(timer.current);
+    setRunning(false); setDemoLabel('Auto (live)'); showToast('Recommender stopped');
+  }
+
+  // pre-compute folders per module
+  const fdata = useMemo(()=>{ const map={}; ALL_MODULES.forEach(m=>map[m.id]=generateFolders(m)); return map; },[]);
+
+  const dash = <span className="count count--muted">—</span>;
+  const rows=[];
+  for(const v of VARIANTS){
+    const vOpen=expanded.has(v.id);
+    rows.push(<tr key={v.id} className="clickable" onClick={()=>toggle(v.id)}>
+      <td><div className="name-cell"><button className={vOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
+        <Icons.Cube className="row-icon" style={{color:'var(--orange)'}}/><span className="row-name" style={{fontWeight:600}}>{v.name}</span></div></td>
+      <td/><td className="center">{dash}</td><td/><td/><td/><td/>
+    </tr>);
+    if(!vOpen) continue;
+    for(const c of v.captures){
+      const cOpen=expanded.has(c.id);
+      rows.push(<tr key={c.id} className="clickable" onClick={()=>toggle(c.id)}>
+        <td><div className="name-cell indent-2"><button className={cOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
+          <Icons.Camera className="row-icon"/><span className="row-name">{c.name}</span><span className="row-meta">{c.cam}</span></div></td>
+        <td/><td className="center">{dash}</td><td/><td/><td/><td/>
+      </tr>);
+      if(!cOpen) continue;
+      for(const m of c.modules){
+        const mOpen=expanded.has(m.id);
+        const set=setForModule(m.id,sets);
+        const folders=fdata[m.id];
+        const up=folders.reduce((a,f)=>a+f.uploaded,0);
+        const an=folders.reduce((a,f)=>a+f.annotated,0);
+        const recSum = (showRec && set) ? folders.reduce((a,f)=>a+recForFolder(f.classes.length,set.members.length,f.idx),0) : null;
+        rows.push(<tr key={m.id} className="clickable" onClick={()=>toggle(m.id)}>
+          <td><div className="name-cell indent-3"><button className={mOpen?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
+            <Icons.Box className="row-icon"/><span className="row-name">{m.name}</span></div></td>
+          <td><ClassChips classes={m.classes}/></td>
+          <td className="center num">{recSum!=null ? <span className="rec-strong">{recSum.toLocaleString()}</span> : dash}</td>
+          <td className="center num"><UploadedCount uploaded={up} recommended={recSum}/></td>
+          <td className="center num"><AnnotatedCount annotated={an} total={up}/></td>
+          <td><span className="date-cell-sm">2026-05-22</span></td>
+          <td className="actions-cell"/>
+        </tr>);
+        if(!mOpen) continue;
+        for(const f of folders){
+          const rec = (showRec && set) ? recForFolder(f.classes.length,set.members.length,f.idx) : null;
+          rows.push(<tr key={f.id}>
+            <td><div className="name-cell indent-4"><span className="chev-spacer"/><Icons.Folder className="row-icon"/><span className="row-name">{f.name}</span></div></td>
+            <td><ClassChips classes={f.classes}/></td>
+            <td className="center num">{rec!=null ? <span className="rec-strong">{rec.toLocaleString()}</span> : dash}</td>
+            <td className="center num"><UploadedCount uploaded={f.uploaded} recommended={rec}/></td>
+            <td className="center num"><AnnotatedCount annotated={f.annotated} total={f.uploaded}/></td>
+            <td><span className="date-cell-sm">2026-05-20</span></td>
+            <td className="actions-cell"/>
+          </tr>);
+        }
+      }
+    }
+  }
+
+  return (
+    <div className="page">
+      <Breadcrumb items={[
+        { label:<span style={{display:'inline-flex',alignItems:'center',gap:4}}><Icons.Home style={{width:13,height:13}}/>Home</span> },
+        { label:'Variant A — Line' }, { label:'Datasets and Annotations' }]}/>
+      <header className="page-header">
+        <div><h1>Datasets and Annotations</h1>
+          <div className="subtitle">Dataset folders per capture, with annotation progress and recommended sizes.</div></div>
+      </header>
+      <div className="banner"><Icons.Info/>
+        <span>The <b>Recommended</b> column is produced by the <b>Data Recommender</b>, which sizes each folder from the <b>Training Sets</b> its module belongs to. Modules not in any training set can't be sized.</span></div>
+      <div className="filter-bar">
+        <Dropdown label="Variant" value="All" options={['All',...VARIANTS.map(v=>v.name)]} onChange={()=>{}}/>
+        <div className="demo-wrap">
+          <span className="demo-tag"><Icons.Flask/>DEMO</span>
+          <Dropdown label="Reco state" value={demoLabel} options={DEMO_OPTS.map(d=>d[0])} onChange={setDemoLabel}/>
+        </div>
+        {RECO_MSG[st] && st!=='incomplete' && <span className="reco-msg"><Icons.Alert/>{RECO_MSG[st]}</span>}
+        <RecoChip state={st} onClick={onChip}/>
+        {st==='running' && <button className="btn btn--danger btn--sm" onClick={onStop}><Icons.X className="icon"/>Stop</button>}
+      </div>
+      <div className="card"><div className="table-scroll"><table className="tbl">
+        <thead><tr>
+          <th style={{minWidth:'280px'}}>Variant / Capture / Module / Folder</th>
+          <th>Classes</th>
+          <th className="center" style={{width:'108px'}}>Recommended</th>
+          <th className="center" style={{width:'84px'}}>Uploaded</th>
+          <th className="center" style={{width:'96px'}}>Annotated</th>
+          <th style={{width:'104px'}}>Modified</th><th className="actions-cell"/>
+        </tr></thead>
+        <tbody>{rows}</tbody>
+      </table></div></div>
+    </div>
+  );
+}
+
+/* ============================ Screen: AI Models ============================ */
+function ModelStatus({ status }) {
+  if(status==='trained') return <span className="status-pill status-pill--green"><span className="dot"/>Trained</span>;
+  if(status==='training') return <span className="status-pill status-pill--amber status-pill--running"><span className="dot"/>Training…</span>;
+  return <span className="status-pill"><span className="dot"/>Queued</span>;
+}
+const TYPE_PREFIX = { surface:'ODC_', bead:'ODC_', dim:'ODC_', ocr:'OCR-D_', presence:'IC_' };
+const AUGS = ['Horizontal Flip','Vertical Flip','Rotation','Object Repositioning','Motion Blur','Gaussian Blur'];
+const WIZ_STEPS = [
+  {t:'Model Name', s:'Type, name & description'},
+  {t:'Training Sets', s:'Pick the set(s) to train on'},
+  {t:'Datasets', s:'Choose dataset folders'},
+  {t:'Model Configuration', s:'Augmentations & params'},
+  {t:'Review', s:'Confirm & start'},
+];
+function ModelWizard({ sets, onCancel, onFinish }) {
+  const [step,setStep]=useState(0);
+  const [typeId,setTypeId]=useState('');
+  const [name,setName]=useState('');
+  const [desc,setDesc]=useState('');
+  const [pickedSets,setPickedSets]=useState(()=>new Set());
+  const [pickedFolders,setPickedFolders]=useState(()=>new Set());
+  const [augs,setAugs]=useState(()=>new Set(['Horizontal Flip','Rotation']));
+  const [imageSize,setImageSize]=useState('640');
+  const [gpu,setGpu]=useState('Any Server');
+  const [patience,setPatience]=useState(20);
+  const [epochs,setEpochs]=useState(100);
+
+  const fmap = useMemo(()=>{ const m={}; ALL_MODULES.forEach(x=>m[x.id]=generateFolders(x)); return m; },[]);
+  const typeSets = sets.filter(s=>s.type===typeId);
+  const pickedModuleIds = [...new Set([...pickedSets].flatMap(sid=>(sets.find(s=>s.id===sid)?.members)||[]))];
+  const folderGroups = pickedModuleIds.map(id=>({ mod:moduleById(id), folders:fmap[id] }));
+  const allFolderIds = folderGroups.flatMap(g=>g.folders.map(f=>f.id));
+
+  // default-select all folders whenever the picked sets change
+  useEffect(()=>{ setPickedFolders(new Set(allFolderIds)); /*eslint-disable-next-line*/ }, [[...pickedSets].sort().join(',')]);
+
+  function changeType(t){ setTypeId(t); setPickedSets(new Set()); }
+  function toggleSet(id){ setPickedSets(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;}); }
+  function toggleFolder(id){ setPickedFolders(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;}); }
+  function toggleAug(a){ setAugs(p=>{const n=new Set(p);n.has(a)?n.delete(a):n.add(a);return n;}); }
+
+  const valid = [
+    !!(typeId && name.trim()),
+    pickedSets.size>=1,
+    pickedFolders.size>=1,
+    epochs>=1 && epochs<=1000 && patience<epochs,
+    true,
+  ];
+  const canNext = valid[step];
+  const pickedSetNames = [...pickedSets].map(id=>sets.find(s=>s.id===id)?.name).filter(Boolean);
+  const estImages = folderGroups.flatMap(g=>g.folders).filter(f=>pickedFolders.has(f.id)).reduce((a,f)=>a+f.uploaded,0);
+
+  function finish(){
+    onFinish({ name:(TYPE_PREFIX[typeId]||'')+name.trim(), type:typeId, set:pickedSetNames[0]||'—',
+      modules:pickedModuleIds, images:estImages });
+  }
+
+  return (
+    <div className="wiz">
+      <div className="wiz-rail">
+        {WIZ_STEPS.map((s,i)=>(
+          <div key={i} className={'wiz-step '+(i===step?'active':i<step?'done':'todo')}>
+            <div className="num">{i<step?<Icons.Check/>:i+1}</div>
+            <div className="st-meta"><b>{s.t}</b><span>{s.s}</span></div>
+          </div>))}
+      </div>
+      <div className="wiz-main">
+        <div className="wiz-body">
+          {step===0 && (<>
+            <h3>Model name</h3><div className="step-sub">Choose the module type, then name your model.</div>
+            <div className="field"><label>Module type</label>
+              <div className="select-wrap"><select className="input" value={typeId} onChange={e=>changeType(e.target.value)}>
+                <option value="">Select module type…</option>
+                {MODULE_TYPES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+              </select><Icons.ChevD className="chev"/></div></div>
+            <div className="field"><label>Model name</label>
+              <div className="prefix-input"><span className="pfx">{TYPE_PREFIX[typeId]||'—'}</span>
+                <input placeholder="e.g. Surface Defect v4" value={name} onChange={e=>setName(e.target.value)} disabled={!typeId}/></div>
+              <div className="hint">The module-type prefix is added automatically.</div></div>
+            <div className="field"><label>Description</label>
+              <textarea className="input" placeholder="What is this model for?" value={desc} onChange={e=>setDesc(e.target.value)}/></div>
+          </>)}
+
+          {step===1 && (<>
+            <h3>Training Sets</h3><div className="step-sub">Pick the training set(s) this model trains on.</div>
+            <div className="banner" style={{marginBottom:14}}><Icons.Info/>
+              <span>This replaces the old <b>Modules &amp; Classes</b> step — the modules and classes now come from the training set you select.</span></div>
+            {typeSets.length===0
+              ? <div className="pick-hint">No {typeId?typeById(typeId).name:''} training sets. Create one in the Training Sets section first.</div>
+              : typeSets.map(s=>{
+                  const sel=pickedSets.has(s.id);
+                  const caps=new Set(s.members.map(id=>moduleById(id)?.capId)).size;
+                  const vars=new Set(s.members.map(id=>moduleById(id)?.varId)).size;
+                  return (<div key={s.id} className={sel?'ts-pick sel':'ts-pick'} onClick={()=>toggleSet(s.id)}>
+                    <Checkbox checked={sel} onChange={()=>toggleSet(s.id)}/>
+                    <div className="tp-meta"><b>{s.name}</b><span>{s.members.length} module{s.members.length!==1?'s':''} · {caps} capture{caps!==1?'s':''} · {vars} variant{vars!==1?'s':''}</span></div>
+                    <TypeBadge typeId={s.type}/>
+                  </div>);
+                })}
+          </>)}
+
+          {step===2 && (<>
+            <h3>Datasets</h3><div className="step-sub">Folders come from the modules in your training set(s). Untick any you want to exclude.</div>
+            {folderGroups.length===0 ? <div className="pick-hint">Select a training set first.</div> :
+              folderGroups.map(g=>(
+                <div key={g.mod.id}>
+                  <div className="ds-mod"><Icons.Box/>{g.mod.varName} · {g.mod.capName} · {g.mod.name}</div>
+                  {g.folders.map(f=>(
+                    <div key={f.id} className="ds-folder">
+                      <Checkbox checked={pickedFolders.has(f.id)} onChange={()=>toggleFolder(f.id)}/>
+                      <Icons.Folder className="row-icon"/><span style={{fontWeight:500}}>{f.name}</span>
+                      <span className="acc-spacer"/><span className="date-cell-sm">{f.uploaded} imgs · {f.annotated} annotated</span>
+                    </div>))}
+                </div>))}
+          </>)}
+
+          {step===3 && (<>
+            <h3>Model configuration</h3><div className="step-sub">Augmentations and training parameters.</div>
+            <div className="section-label">Augmentations <span className="ln"/></div>
+            <div className="aug-grid">
+              {AUGS.map(a=>(
+                <div key={a} className={augs.has(a)?'aug-item on':'aug-item'} onClick={()=>toggleAug(a)}>
+                  <Checkbox checked={augs.has(a)} onChange={()=>toggleAug(a)}/>{a}
+                </div>))}
+            </div>
+            <div className="section-label">Advanced settings <span className="ln"/></div>
+            <div className="cfg-grid">
+              <div className="field" style={{margin:0}}><label>Image size</label>
+                <div className="select-wrap"><select className="input" value={imageSize} onChange={e=>setImageSize(e.target.value)}>
+                  <option>416</option><option>512</option><option>640</option><option>768</option><option>1024</option>
+                </select><Icons.ChevD className="chev"/></div></div>
+              <div className="field" style={{margin:0}}><label>Training GPU</label>
+                <div className="select-wrap"><select className="input" value={gpu} onChange={e=>setGpu(e.target.value)}>
+                  <option>Any Server</option><option>40-series Server</option><option>50-series Server</option>
+                </select><Icons.ChevD className="chev"/></div></div>
+              <div className="field" style={{margin:0}}><label>Patience</label>
+                <input className="input" type="number" value={patience} onChange={e=>setPatience(+e.target.value)}/>
+                {patience>=epochs && <div className="err">Patience must be less than epochs.</div>}</div>
+              <div className="field" style={{margin:0}}><label>Epochs</label>
+                <input className="input" type="number" value={epochs} onChange={e=>setEpochs(+e.target.value)}/>
+                {(epochs<1||epochs>1000) && <div className="err">Epochs must be 1–1000.</div>}</div>
+            </div>
+          </>)}
+
+          {step===4 && (<>
+            <h3>Review</h3><div className="step-sub">Confirm the configuration, then start training.</div>
+            <div className="review-row"><span className="rk">Model</span><b>{(TYPE_PREFIX[typeId]||'')+name}</b></div>
+            <div className="review-row"><span className="rk">Module type</span><TypeBadge typeId={typeId}/></div>
+            <div className="review-row"><span className="rk">Training set(s)</span>
+              <span className="chips">{pickedSetNames.map(n=><span key={n} className="set-link"><Icons.Stack style={{width:12,height:12}}/>{n}</span>)}</span></div>
+            <div className="review-row"><span className="rk">Modules / folders</span><span>{pickedModuleIds.length} modules · {pickedFolders.size} folders · ~{estImages.toLocaleString()} images</span></div>
+            <div className="review-row"><span className="rk">Augmentations</span><span>{[...augs].join(', ')||'None'}</span></div>
+            <div className="review-row"><span className="rk">Config</span><span>Image {imageSize}px · {gpu} · {epochs} epochs · patience {patience}</span></div>
+          </>)}
+        </div>
+        <div className="wiz-foot">
+          <button className="btn btn--ghost" onClick={onCancel}>Cancel</button>
+          <div className="spacer"/>
+          {step>0 && <button className="btn btn--secondary" onClick={()=>setStep(s=>s-1)}><Icons.ChevR className="icon" style={{transform:'rotate(180deg)'}}/>Back</button>}
+          {step<4
+            ? <button className="btn btn--primary" disabled={!canNext} onClick={()=>setStep(s=>s+1)}>Next<Icons.ChevR className="icon"/></button>
+            : <button className="btn btn--primary" onClick={finish}><Icons.Wand className="icon"/>Start training</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+function AiModelsScreen({ sets, showToast }) {
+  const [models,setModels]=useState(INITIAL_MODELS);
+  const [wizard,setWizard]=useState(false);
+  function finish(m){
+    setModels(prev=>[{ id:'mdl-'+(_modId++), name:m.name, type:m.type, set:m.set, modules:m.modules,
+      trainedAt:'2026-06-29', status:'queued', acc:'—', images:m.images }, ...prev]);
+    setWizard(false); showToast('Model queued for training');
+  }
+  return (
+    <div className="page">
+      <Breadcrumb items={[
+        { label:<span style={{display:'inline-flex',alignItems:'center',gap:4}}><Icons.Home style={{width:13,height:13}}/>Home</span> },
+        { label:'Variant A — Line' }, { label:'AI Models' }, ...(wizard?[{label:'Train AI Model'}]:[]) ]}/>
+      <header className="page-header">
+        <div><h1>{wizard?'Train AI Model':'AI Models'}</h1>
+          <div className="subtitle">{wizard?'Five steps — modules & classes now come from a Training Set.':'Train and manage inspection models. Models now train on Training Sets.'}</div></div>
+        {!wizard && <button className="btn btn--primary" onClick={()=>setWizard(true)}><Icons.Plus className="icon"/>Train AI Model</button>}
+      </header>
+      {wizard ? <ModelWizard sets={sets} onCancel={()=>setWizard(false)} onFinish={finish}/> : (
+        <div className="card"><div className="table-scroll"><table className="tbl">
+          <thead><tr><th style={{width:'24%'}}>Model</th><th style={{width:'150px'}}>Model type</th>
+            <th>Training set</th><th className="center" style={{width:'108px'}}>Training data</th>
+            <th style={{width:'140px'}}>Status</th><th className="center" style={{width:'92px'}}>Accuracy</th>
+            <th style={{width:'104px'}}>Created</th></tr></thead>
+          <tbody>{models.map(m=>(
+            <tr key={m.id}>
+              <td><div className="ts-name"><b>{m.name}</b><span>{m.modules.length} module{m.modules.length!==1?'s':''}</span></div></td>
+              <td><TypeBadge typeId={m.type}/></td>
+              <td><span className="set-link"><Icons.Stack style={{width:12,height:12}}/>{m.set}</span></td>
+              <td className="center num"><span className="count">{m.images.toLocaleString()}</span><span style={{color:'var(--muted)',fontSize:11}}> imgs</span></td>
+              <td><ModelStatus status={m.status}/></td>
+              <td className="center num"><span className="count">{m.acc}</span></td>
+              <td><span className="date-cell-sm">{m.trainedAt}</span></td>
+            </tr>))}</tbody>
+        </table></div></div>
+      )}
+    </div>
+  );
+}
+
+/* ============================ Screen: Instances (Model Selection) ============================ */
+const INSTANCE_MODULE_IDS = ['m1','m4','m6','m2','m3'];
+const INSTANCE_STAGES = ['Basic','Add Camera Details','Capture','Model Selection','Finish'];
+function InstancesScreen() {
+  const models = INITIAL_MODELS;
+  const mods = INSTANCE_MODULE_IDS.map(moduleById);
+  const [expanded,setExpanded]=useState(()=>new Set(['m1']));
+  const [showOthers,setShowOthers]=useState(()=>new Set());
+  // default-select the latest trained model that CONSIDERED each module
+  const [selected,setSelected]=useState(()=>{ const o={};
+    mods.forEach(m=>{ const r=modelsForModule(m,models); if(r.latest) o[m.id]=r.latest.id; }); return o; });
+  const toggleAcc=(id)=>setExpanded(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
+  const toggleOthers=(id,e)=>{ e.stopPropagation(); setShowOthers(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;}); };
+  const pick=(mid,modelId)=>setSelected(s=>({...s,[mid]:modelId}));
+
+  function ModelRow({ mod, model, isLatest }) {
+    const sel=selected[mod.id]===model.id;
+    return (<div className={sel?'model-row sel':'model-row'} onClick={()=>pick(mod.id,model.id)}>
+      <span className={sel?'radio on':'radio'}/>
+      <div className="mr-meta"><b>{model.name}{isLatest && <> <span className="latest-tag">LATEST</span></>}</b>
+        <span>Trained {model.trainedAt} · {model.acc} acc · {model.images.toLocaleString()} imgs</span></div>
+      <ClassChips classes={modelClasses(model)}/>
+    </div>);
+  }
+
+  return (
+    <div className="page">
+      <Breadcrumb items={[
+        { label:<span style={{display:'inline-flex',alignItems:'center',gap:4}}><Icons.Home style={{width:13,height:13}}/>Home</span> },
+        { label:'Variant A — Line' }, { label:'Instances' }, { label:'Create instance' }]}/>
+      <header className="page-header">
+        <div><h1>Create Instance</h1><div className="subtitle">Assign a trained model to each module on this line.</div></div>
+      </header>
+      <div className="stage-rail">
+        {INSTANCE_STAGES.map((s,i)=>(
+          <React.Fragment key={s}>
+            {i>0 && <Icons.ChevR className="stage-sep" style={{width:13,height:13}}/>}
+            <span className={'stage '+(i<3?'done':i===3?'active':'')}>
+              <span className="sn">{i<3?<Icons.Check/>:i+1}</span>{s}</span>
+          </React.Fragment>))}
+      </div>
+      <div className="banner"><Icons.Info/>
+        <span>Each module pre-selects the <b>latest trained model that actually considered it</b> (its dataset was in the training). Use the layers icon on a module to also reveal other trainings of the same module type that did <b>not</b> consider it.</span></div>
+      <div className="card" style={{padding:'14px 16px'}}>
+        {mods.map(m=>{
+          const r=modelsForModule(m,models);
+          const open=expanded.has(m.id);
+          const showO=showOthers.has(m.id);
+          return (
+            <div className="acc" key={m.id}>
+              <div className="acc-head" onClick={()=>toggleAcc(m.id)}>
+                <button className={open?'chev-btn open':'chev-btn'}><Icons.ChevR/></button>
+                <Icons.Box className="row-icon"/>
+                <span className="acc-title">{m.name}</span>
+                <span className="acc-chip">{m.varName}</span>
+                <span className="acc-chip">{m.capName}</span>
+                <span className="acc-chip">{m.cam}</span>
+                <ClassChips classes={m.classes}/>
+                <span className="acc-spacer"/>
+                <span style={{fontSize:11.5,color:selected[m.id]?'var(--green)':'var(--muted)',fontWeight:600}}>
+                  {selected[m.id]?'Model selected':'No model'}</span>
+                <button className={showO?'acc-icon-btn on':'acc-icon-btn'} onClick={(e)=>toggleOthers(m.id,e)} aria-label="Show model trainings of same module type">
+                  <Icons.Layers style={{width:16,height:16}}/>
+                  <span className="ai-tip">Show Model Trainings of same module type</span>
+                </button>
+              </div>
+              {open && (
+                <div className="acc-body">
+                  {r.considered.length===0 && <div className="set-none">No trained model has considered this module yet.</div>}
+                  {r.considered.map(model=><ModelRow key={model.id} mod={m} model={model} isLatest={model.id===r.latest?.id}/>)}
+                  {showO && (r.others.length>0 ? (<>
+                    <div className="other-divider"><span className="ln"/>Other trainings of this module type — did not consider this module<span className="ln"/></div>
+                    {r.others.map(model=><ModelRow key={model.id} mod={m} model={model} isLatest={false}/>)}
+                  </>) : <div className="set-none" style={{marginTop:10}}>No other trainings of this module type.</div>)}
+                </div>)}
+            </div>);
+        })}
+      </div>
+      <div style={{display:'flex',gap:10,marginTop:18,justifyContent:'flex-end'}}>
+        <button className="btn btn--secondary"><Icons.ChevR className="icon" style={{transform:'rotate(180deg)'}}/>Back</button>
+        <button className="btn btn--primary">Next: Finish<Icons.ChevR className="icon"/></button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Placeholder ============================ */
+function Placeholder({ title, icon:Ico }) {
+  return (<div className="page"><div className="placeholder"><div className="e-ico"><Ico size={24}/></div>
+    <h2>{title}</h2><div>Out of scope for this prototype — focus is the Training Sets ↔ Datasets ↔ AI Models flow.</div></div></div>);
+}
+
+/* ============================ App ============================ */
+function App() {
+  const [section,setSection]=useState('training');
+  const [sets,setSets]=useState(INITIAL_SETS);
+  const [toast,setToast]=useState(null);
+  const showToast=(msg)=>{ setToast(msg); setTimeout(()=>setToast(null),2200); };
+  useEffect(()=>{ window.scrollTo({top:0}); },[section]);
+  return (
+    <div className="app">
+      <Sidebar section={section} onNavigate={setSection}/>
+      <div className="main">
+        <header className="topbar">
+          <div className="search"><Icons.Search style={{width:16,height:16}}/><input placeholder="Search…"/></div>
+          <div className="spacer"/><button className="icon-btn"><Icons.Bell/></button>
+        </header>
+        {section==='training' && <TrainingSetsScreen sets={sets} setSets={setSets} showToast={showToast}/>}
+        {section==='datasets' && <DatasetsScreen sets={sets} showToast={showToast}/>}
+        {section==='models' && <AiModelsScreen sets={sets} showToast={showToast}/>}
+        {section==='recipe' && <Placeholder title="Recipe Management" icon={Icons.Gear}/>}
+        {section==='instances' && <InstancesScreen/>}
+      </div>
+      {toast && <div className="toast"><Icons.Check/>{toast}</div>}
+    </div>
+  );
+}
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+
+<script>
+  try {
+    const src = document.getElementById('app-src').textContent;
+    const { code } = Babel.transform(src, { presets: [["react", { runtime: "classic" }]] });
+    new Function(code)();
+  } catch (e) {
+    document.getElementById('root').innerHTML =
+      '<pre style="padding:24px;color:#c4361a;font:13px monospace;white-space:pre-wrap">'+(e && e.message ? e.message : e)+'</pre>';
+    console.error(e);
+  }
+</script>
+</body>
+</html>
